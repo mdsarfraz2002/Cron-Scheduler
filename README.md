@@ -217,25 +217,20 @@ This implementation addresses several non-obvious edge cases:
 
 **Solution**: All timestamps use a consistent `now_ist()` helper that returns naive IST (Asia/Kolkata, UTC+5:30) datetimes using `pytz`. APScheduler is configured to work in IST.
 
-### 5. Large Response Handling
 
-**Problem**: Storing huge response bodies could cause memory exhaustion (OOM).
-
-**Solution**: Response bodies are truncated at 100KB with a clear indication when truncation occurs.
-
-### 6. Exponential Backoff
+### 5. Exponential Backoff
 
 **Problem**: Fixed retry delays can hammer failing targets unnecessarily.
 
 **Solution**: Retries use exponential backoff: 1s → 2s → 4s (with configurable base and max).
 
-### 7. Validation Edge Cases
+### 6. Validation Edge Cases
 
 **Problem**: Creating an interval schedule without `interval_seconds` would cause runtime errors.
 
 **Solution**: Pydantic model validators ensure required fields are present based on schedule type, returning clear 422 errors.
 
-### 8. SSL Certificate Errors
+### 7. SSL Certificate Errors
 
 **Problem**: SSL errors were being classified as generic connection errors.
 
