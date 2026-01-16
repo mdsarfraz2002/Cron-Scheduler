@@ -159,29 +159,14 @@ curl http://localhost:8000/api/v1/metrics/prometheus
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                         FastAPI App                              │
-├─────────────────────────────────────────────────────────────────┤
-│  Routers: targets.py | schedules.py | runs.py | metrics.py      │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  ┌─────────────────┐    ┌──────────────────┐                    │
-│  │ Scheduler Engine │◄──►│  HTTP Executor   │                    │
-│  │  (APScheduler)   │    │  (httpx async)   │                    │
-│  └────────┬────────┘    └────────┬─────────┘                    │
-│           │                      │                               │
-│           ▼                      ▼                               │
-│  ┌─────────────────────────────────────────┐                    │
-│  │         SQLAlchemy Async ORM            │                    │
-│  └─────────────────────────────────────────┘                    │
-│           │                                                      │
-│           ▼                                                      │
-│  ┌─────────────────────────────────────────┐                    │
-│  │     SQLite / PostgreSQL Database        │                    │
-│  └─────────────────────────────────────────┘                    │
-└─────────────────────────────────────────────────────────────────┘
-```
+### High-Level Architecture
+<img width="3706" height="4097" alt="APScheduler Retry Pipeline-2026-01-16-140842" src="https://github.com/user-attachments/assets/1573b836-894e-4a60-9a01-97aba1e5df09" />
+
+### Scheduled Execution Flow
+
+<img width="3080" height="8192" alt="Untitled diagram-2026-01-16-140801" src="https://github.com/user-attachments/assets/e8e44df8-62d4-47d0-8e7f-43f222f25e9c" />
+
+
 
 ### Key Components
 
