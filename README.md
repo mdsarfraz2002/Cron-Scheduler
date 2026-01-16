@@ -230,7 +230,7 @@ This implementation addresses several non-obvious edge cases:
 
 **Problem**: Mixing `datetime.utcnow()` with APScheduler's local time handling causes scheduling misalignment.
 
-**Solution**: All timestamps use a consistent `utcnow()` helper that returns naive UTC datetimes. APScheduler is configured to work in UTC.
+**Solution**: All timestamps use a consistent `now_ist()` helper that returns naive IST (Asia/Kolkata, UTC+5:30) datetimes using `pytz`. APScheduler is configured to work in IST.
 
 ### 5. Large Response Handling
 
