@@ -4,15 +4,20 @@ API Scheduler - Cron for API Calls
 A backend service that lets users schedule HTTP requests to external targets.
 """
 import logging
+from pathlib import Path
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.config import get_settings
 from app.database import init_db, close_db
 from app.scheduler import scheduler_engine
 from app.routers import targets, schedules, runs, metrics
+
+# Static files directory
+STATIC_DIR = Path(__file__).parent / "static"
 
 # Configure logging
 logging.basicConfig(
@@ -117,13 +122,20 @@ app.include_router(metrics.router, prefix="/api/v1")
 
 @app.get("/")
 async def root():
-    """Root endpoint with API information."""
+    """Serve the web UI."""
+    return FileResponse(STATIC_DIR / "index.html")
+
+
+@app.get("/api")
+async def api_info():
+    """Root API endpoint with information."""
     return {
         "name": "API Scheduler",
         "version": "1.0.0",
         "description": "Cron for API Calls",
         "docs": "/docs",
         "health": "/api/v1/health",
+        "ui": "/",
     }
 
 

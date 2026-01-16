@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Scheduler</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a25;
+            --bg-card: #15151f;
+            --border: #2a2a3a;
+            --text-primary: #f0f0f5;
+            --text-secondary: #8888a0;
+            --text-muted: #5a5a70;
+            --accent: #6366f1;
+            --accent-hover: #818cf8;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --info: #3b82f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent), #a855f7);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo span {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        /* Navigation Tabs */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            padding: 1rem 2rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tab {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .tab.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.2s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .stat-value.success { color: var(--success); }
+        .stat-value.warning { color: var(--warning); }
+        .stat-value.error { color: var(--error); }
+        .stat-value.info { color: var(--info); }
+
+        /* Buttons */
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent);
+        }
+
+        .btn-success { background: var(--success); color: white; }
+        .btn-warning { background: var(--warning); color: black; }
+        .btn-danger { background: var(--error); color: white; }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+        }
+
+        /* Tables */
+        .table-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .table-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 1rem 1.5rem;
+            text-align: left;
+        }
+
+        th {
+            background: var(--bg-tertiary);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        tr {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s;
+        }
+
+        tr:hover {
+            background: var(--bg-tertiary);
+        }
+
+        tr:last-child {
+            border-bottom: none;
+        }
+
+        /* Status Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--success);
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+        }
+
+        .badge-error {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--error);
+        }
+
+        .badge-info {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--info);
+        }
+
+        .badge-muted {
+            background: var(--bg-tertiary);
+            color: var(--text-muted);
+        }
+
+        .badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        /* Method Badges */
+        .method {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .method-get { background: rgba(34, 197, 94, 0.2); color: var(--success); }
+        .method-post { background: rgba(59, 130, 246, 0.2); color: var(--info); }
+        .method-put { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+        .method-patch { background: rgba(168, 85, 247, 0.2); color: #a855f7; }
+        .method-delete { background: rgba(239, 68, 68, 0.2); color: var(--error); }
+
+        /* Code/Mono text */
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .url {
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.active .modal {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.25rem;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            padding: 1.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* Content sections */
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        /* Action buttons in table */
+        .actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            padding: 0.4rem 0.6rem;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.8rem;
+        }
+
+        .action-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border-color: var(--text-muted);
+        }
+
+        .action-btn.pause:hover { border-color: var(--warning); color: var(--warning); }
+        .action-btn.play:hover { border-color: var(--success); color: var(--success); }
+        .action-btn.delete:hover { border-color: var(--error); color: var(--error); }
+
+        /* Time ago */
+        .time-ago {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Loading spinner */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .toast {
+            padding: 1rem 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+        }
+
+        .toast.success { border-left: 3px solid var(--success); }
+        .toast.error { border-left: 3px solid var(--error); }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .form-row { grid-template-columns: 1fr; }
+            th, td { padding: 0.75rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <div class="logo-icon">⏱️</div>
+            <div>
+                <h1>API Scheduler</h1>
+                <span>Cron for API Calls</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-secondary" onclick="refreshAll()">↻ Refresh</button>
+        </div>
+    </header>
+
+    <nav class="tabs">
+        <button class="tab active" data-section="dashboard">Dashboard</button>
+        <button class="tab" data-section="targets">Targets</button>
+        <button class="tab" data-section="schedules">Schedules</button>
+        <button class="tab" data-section="runs">Runs</button>
+    </nav>
+
+    <main class="container">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="section active">
+            <div class="stats-grid" id="stats-grid">
+                <!-- Stats loaded dynamically -->
+            </div>
+
+            <div class="table-container" style="margin-bottom: 2rem;">
+                <div class="table-header">
+                    <h3 class="table-title">Recent Runs</h3>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Schedule</th>
+                            <th>Status</th>
+                            <th>Attempts</th>
+                            <th>Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recent-runs">
+                        <!-- Loaded dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Targets Section -->
+        <section id="targets" class="section">
+            <div class="section-header">
+                <h2 class="section-title">Targets</h2>
+                <button class="btn btn-primary" onclick="showModal('target-modal')">+ New Target</button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Method</th>
+                            <th>URL</th>
+                            <th>Timeout</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="targets-table">
+                        <!-- Loaded dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Schedules Section -->
+        <section id="schedules" class="section">
+            <div class="section-header">
+                <h2 class="section-title">Schedules</h2>
+                <button class="btn btn-primary" onclick="showModal('schedule-modal')">+ New Schedule</button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Interval</th>
+                            <th>Status</th>
+                            <th>Runs</th>
+                            <th>Last Run</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="schedules-table">
+                        <!-- Loaded dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Runs Section -->
+        <section id="runs" class="section">
+            <div class="section-header">
+                <h2 class="section-title">Runs</h2>
+                <select class="form-select" style="width: auto;" id="runs-filter" onchange="loadRuns()">
+                    <option value="">All Schedules</option>
+                </select>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Schedule</th>
+                            <th>Status</th>
+                            <th>Attempts</th>
+                            <th>Status Code</th>
+                            <th>Scheduled At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="runs-table">
+                        <!-- Loaded dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <!-- Target Modal -->
+    <div class="modal-overlay" id="target-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Create Target</h3>
+                <button class="modal-close" onclick="hideModal('target-modal')">&times;</button>
+            </div>
+            <form id="target-form" onsubmit="createTarget(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Name *</label>
+                        <input type="text" class="form-input" name="name" required placeholder="My API">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Method</label>
+                            <select class="form-select" name="method">
+                                <option value="GET">GET</option>
+                                <option value="POST">POST</option>
+                                <option value="PUT">PUT</option>
+                                <option value="PATCH">PATCH</option>
+                                <option value="DELETE">DELETE</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Timeout (s)</label>
+                            <input type="number" class="form-input" name="timeout_seconds" value="30" min="1" max="120">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">URL *</label>
+                        <input type="url" class="form-input" name="url" required placeholder="https://api.example.com/endpoint">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Headers (JSON)</label>
+                        <textarea class="form-textarea" name="headers" placeholder='{"Content-Type": "application/json"}'></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Body Template</label>
+                        <textarea class="form-textarea" name="body_template" placeholder='{"key": "value"}'></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="hideModal('target-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Target</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Schedule Modal -->
+    <div class="modal-overlay" id="schedule-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Create Schedule</h3>
+                <button class="modal-close" onclick="hideModal('schedule-modal')">&times;</button>
+            </div>
+            <form id="schedule-form" onsubmit="createSchedule(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Name *</label>
+                        <input type="text" class="form-input" name="name" required placeholder="Every 5 minutes">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Target *</label>
+                        <select class="form-select" name="target_id" id="schedule-target-select" required>
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Type</label>
+                            <select class="form-select" name="schedule_type" onchange="toggleScheduleFields(this)">
+                                <option value="interval">Interval</option>
+                                <option value="cron">Cron</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="interval-field">
+                            <label class="form-label">Interval (seconds) *</label>
+                            <input type="number" class="form-input" name="interval_seconds" min="1" value="60">
+                        </div>
+                        <div class="form-group" id="cron-field" style="display: none;">
+                            <label class="form-label">Cron Expression *</label>
+                            <input type="text" class="form-input" name="cron_expression" placeholder="*/5 * * * *">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Duration (seconds)</label>
+                            <input type="number" class="form-input" name="duration_seconds" min="1" placeholder="Optional">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Max Runs</label>
+                            <input type="number" class="form-input" name="max_runs" min="1" placeholder="Optional">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="hideModal('schedule-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Schedule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Run Detail Modal -->
+    <div class="modal-overlay" id="run-modal">
+        <div class="modal" style="max-width: 700px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Run Details</h3>
+                <button class="modal-close" onclick="hideModal('run-modal')">&times;</button>
+            </div>
+            <div class="modal-body" id="run-detail-content">
+                <!-- Loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        const API_BASE = '/api/v1';
+        let schedules = [];
+        let targets = [];
+
+        // Tab switching
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.section).classList.add('active');
+            });
+        });
+
+        // Modal functions
+        function showModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function hideModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // Toast notifications
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<span>${type === 'success' ? '✓' : '✕'}</span> ${message}`;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // API calls
+        async function api(endpoint, options = {}) {
+            const response = await fetch(API_BASE + endpoint, {
+                ...options,
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            });
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.detail || 'Request failed');
+            }
+            return response.json();
+        }
+
+        // Load functions
+        async function loadMetrics() {
+            const metrics = await api('/metrics');
+            document.getElementById('stats-grid').innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-label">Total Targets</div>
+                    <div class="stat-value info">${metrics.total_targets}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Active Schedules</div>
+                    <div class="stat-value success">${metrics.active_schedules}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Paused Schedules</div>
+                    <div class="stat-value warning">${metrics.paused_schedules}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Runs</div>
+                    <div class="stat-value">${metrics.total_runs}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Runs (24h)</div>
+                    <div class="stat-value">${metrics.runs_last_24h}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Success Rate (24h)</div>
+                    <div class="stat-value ${metrics.success_rate_24h > 90 ? 'success' : metrics.success_rate_24h > 50 ? 'warning' : 'error'}">${metrics.success_rate_24h}%</div>
+                </div>
+            `;
+        }
+
+        async function loadTargets() {
+            targets = await api('/targets');
+            const tbody = document.getElementById('targets-table');
+            if (targets.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No targets yet. Create one to get started!</td></tr>';
+                return;
+            }
+            tbody.innerHTML = targets.map(t => `
+                <tr>
+                    <td><strong>${t.name}</strong></td>
+                    <td><span class="method method-${t.method.toLowerCase()}">${t.method}</span></td>
+                    <td class="mono url" title="${t.url}">${t.url}</td>
+                    <td class="mono">${t.timeout_seconds}s</td>
+                    <td class="actions">
+                        <button class="action-btn delete" onclick="deleteTarget('${t.id}')">🗑</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Update schedule target select
+            document.getElementById('schedule-target-select').innerHTML = 
+                targets.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+        }
+
+        async function loadSchedules() {
+            schedules = await api('/schedules');
+            const tbody = document.getElementById('schedules-table');
+            if (schedules.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No schedules yet. Create one to start scheduling!</td></tr>';
+                return;
+            }
+            tbody.innerHTML = schedules.map(s => `
+                <tr>
+                    <td><strong>${s.name}</strong></td>
+                    <td><span class="badge badge-muted">${s.schedule_type}</span></td>
+                    <td class="mono">${s.interval_seconds ? s.interval_seconds + 's' : s.cron_expression || '-'}</td>
+                    <td><span class="badge badge-${getStatusBadge(s.status)}">${s.status}</span></td>
+                    <td class="mono">${s.run_count}${s.max_runs ? '/' + s.max_runs : ''}</td>
+                    <td class="time-ago">${s.last_run_at ? timeAgo(s.last_run_at) : 'Never'}</td>
+                    <td class="actions">
+                        ${s.status === 'active' ? 
+                            `<button class="action-btn pause" onclick="pauseSchedule('${s.id}')" title="Pause">⏸</button>` :
+                            s.status === 'paused' ?
+                            `<button class="action-btn play" onclick="resumeSchedule('${s.id}')" title="Resume">▶</button>` : ''
+                        }
+                        <button class="action-btn delete" onclick="deleteSchedule('${s.id}')">🗑</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Update runs filter
+            document.getElementById('runs-filter').innerHTML = 
+                '<option value="">All Schedules</option>' +
+                schedules.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+        }
+
+        async function loadRuns() {
+            const scheduleId = document.getElementById('runs-filter').value;
+            const params = scheduleId ? `?schedule_id=${scheduleId}&limit=50` : '?limit=50';
+            const runs = await api('/runs' + params);
+            const tbody = document.getElementById('runs-table');
+            if (runs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="empty-state">No runs yet.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = runs.map(r => `
+                <tr>
+                    <td class="mono">${r.id.substring(0, 8)}...</td>
+                    <td>${getScheduleName(r.schedule_id)}</td>
+                    <td><span class="badge badge-${getStatusBadge(r.status)}">${r.status}</span></td>
+                    <td class="mono">${r.attempt_count}</td>
+                    <td class="mono">${r.final_status_code || '-'}</td>
+                    <td class="time-ago">${timeAgo(r.scheduled_at)}</td>
+                    <td class="actions">
+                        <button class="action-btn" onclick="showRunDetail('${r.id}')">👁</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        async function loadRecentRuns() {
+            const runs = await api('/runs?limit=5');
+            const tbody = document.getElementById('recent-runs');
+            if (runs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="empty-state">No runs yet.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = runs.map(r => `
+                <tr onclick="showRunDetail('${r.id}')" style="cursor: pointer;">
+                    <td>${getScheduleName(r.schedule_id)}</td>
+                    <td><span class="badge badge-${getStatusBadge(r.status)}">${r.status}</span></td>
+                    <td class="mono">${r.attempt_count}</td>
+                    <td class="time-ago">${timeAgo(r.scheduled_at)}</td>
+                </tr>
+            `).join('');
+        }
+
+        async function showRunDetail(runId) {
+            const run = await api(`/runs/${runId}`);
+            document.getElementById('run-detail-content').innerHTML = `
+                <div style="margin-bottom: 1.5rem;">
+                    <p><strong>ID:</strong> <span class="mono">${run.id}</span></p>
+                    <p><strong>Status:</strong> <span class="badge badge-${getStatusBadge(run.status)}">${run.status}</span></p>
+                    <p><strong>Scheduled:</strong> ${new Date(run.scheduled_at).toLocaleString()}</p>
+                    <p><strong>Attempts:</strong> ${run.attempt_count}</p>
+                    ${run.final_error_message ? `<p><strong>Error:</strong> ${run.final_error_message}</p>` : ''}
+                </div>
+                <h4 style="margin-bottom: 1rem;">Attempts</h4>
+                ${run.attempts.map(a => `
+                    <div style="background: var(--bg-tertiary); border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <strong>Attempt ${a.attempt_number}</strong>
+                            <span class="badge badge-${a.status_code && a.status_code < 400 ? 'success' : 'error'}">${a.status_code || a.error_type}</span>
+                        </div>
+                        <p class="mono" style="font-size: 0.8rem;">${a.request_method} ${a.request_url}</p>
+                        ${a.latency_ms ? `<p style="font-size: 0.8rem; color: var(--text-muted);">Latency: ${a.latency_ms.toFixed(2)}ms</p>` : ''}
+                        ${a.error_message ? `<p style="font-size: 0.8rem; color: var(--error);">${a.error_message}</p>` : ''}
+                    </div>
+                `).join('')}
+            `;
+            showModal('run-modal');
+        }
+
+        // Create functions
+        async function createTarget(e) {
+            e.preventDefault();
+            const form = e.target;
+            const data = {
+                name: form.name.value,
+                url: form.url.value,
+                method: form.method.value,
+                timeout_seconds: parseFloat(form.timeout_seconds.value),
+                headers: form.headers.value ? JSON.parse(form.headers.value) : {},
+                body_template: form.body_template.value || null
+            };
+            try {
+                await api('/targets', { method: 'POST', body: JSON.stringify(data) });
+                showToast('Target created successfully');
+                hideModal('target-modal');
+                form.reset();
+                loadTargets();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        async function createSchedule(e) {
+            e.preventDefault();
+            const form = e.target;
+            const data = {
+                name: form.name.value,
+                target_id: form.target_id.value,
+                schedule_type: form.schedule_type.value,
+                interval_seconds: form.schedule_type.value === 'interval' ? parseInt(form.interval_seconds.value) : null,
+                cron_expression: form.schedule_type.value === 'cron' ? form.cron_expression.value : null,
+                duration_seconds: form.duration_seconds.value ? parseInt(form.duration_seconds.value) : null,
+                max_runs: form.max_runs.value ? parseInt(form.max_runs.value) : null
+            };
+            try {
+                await api('/schedules', { method: 'POST', body: JSON.stringify(data) });
+                showToast('Schedule created successfully');
+                hideModal('schedule-modal');
+                form.reset();
+                loadSchedules();
+                loadMetrics();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // Action functions
+        async function deleteTarget(id) {
+            if (!confirm('Delete this target? All associated schedules will also be deleted.')) return;
+            try {
+                await api(`/targets/${id}`, { method: 'DELETE' });
+                showToast('Target deleted');
+                loadTargets();
+                loadSchedules();
+                loadMetrics();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        async function deleteSchedule(id) {
+            if (!confirm('Delete this schedule?')) return;
+            try {
+                await api(`/schedules/${id}`, { method: 'DELETE' });
+                showToast('Schedule deleted');
+                loadSchedules();
+                loadMetrics();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        async function pauseSchedule(id) {
+            try {
+                await api(`/schedules/${id}/pause`, { method: 'POST' });
+                showToast('Schedule paused');
+                loadSchedules();
+                loadMetrics();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        async function resumeSchedule(id) {
+            try {
+                await api(`/schedules/${id}/resume`, { method: 'POST' });
+                showToast('Schedule resumed');
+                loadSchedules();
+                loadMetrics();
+            } catch (err) {
+                showToast(err.message, 'error');
+            }
+        }
+
+        // Utility functions
+        function toggleScheduleFields(select) {
+            document.getElementById('interval-field').style.display = select.value === 'interval' ? 'block' : 'none';
+            document.getElementById('cron-field').style.display = select.value === 'cron' ? 'block' : 'none';
+        }
+
+        function getStatusBadge(status) {
+            const map = {
+                'active': 'success', 'success': 'success',
+                'paused': 'warning', 'running': 'info', 'pending': 'info',
+                'expired': 'muted', 'failed': 'error', 'timeout': 'error'
+            };
+            return map[status] || 'muted';
+        }
+
+        function getScheduleName(id) {
+            const schedule = schedules.find(s => s.id === id);
+            return schedule ? schedule.name : id.substring(0, 8) + '...';
+        }
+
+        function timeAgo(dateStr) {
+            const date = new Date(dateStr);
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 60) return 'just now';
+            if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
+            if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
+            return Math.floor(seconds / 86400) + 'd ago';
+        }
+
+        function refreshAll() {
+            loadMetrics();
+            loadTargets();
+            loadSchedules();
+            loadRuns();
+            loadRecentRuns();
+            showToast('Refreshed');
+        }
+
+        // Initial load
+        (async function init() {
+            await loadTargets();
+            await loadSchedules();
+            await loadMetrics();
+            await loadRecentRuns();
+            await loadRuns();
+
+            // Auto-refresh every 10 seconds
+            setInterval(() => {
+                loadMetrics();
+                loadRecentRuns();
+                loadRuns();
+            }, 10000);
+        })();
+    </script>
+</body>
+</html>
