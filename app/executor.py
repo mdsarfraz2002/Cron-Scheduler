@@ -5,6 +5,7 @@ import warnings
 from datetime import datetime, timezone
 from typing import Optional, Tuple
 import httpx
+import pytz
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import (
@@ -19,13 +20,16 @@ warnings.filterwarnings("ignore", message="Unverified HTTPS request")
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
+# IST timezone
+IST = pytz.timezone('Asia/Kolkata')
+
 # Maximum response body size to store (100KB)
 MAX_RESPONSE_BODY_SIZE = 100 * 1024
 
 
-def utcnow() -> datetime:
-    """Get current UTC time as timezone-aware datetime."""
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+def now_ist() -> datetime:
+    """Get current IST time as naive datetime for database storage."""
+    return datetime.now(IST).replace(tzinfo=None)
 
 
 def classify_error(exception: Exception) -> Tuple[ErrorType, str]:
@@ -118,7 +122,7 @@ class HttpExecutor:
     ) -> Run:
         """Execute a run with retries and track all attempts."""
         run.status = RunStatus.RUNNING
-        run.started_at = utcnow()
+        run.started_at = now_ist()
         session.add(run)
         await session.flush()
         
@@ -173,7 +177,7 @@ class HttpExecutor:
                 run.final_error_type = last_attempt.error_type
                 run.final_error_message = last_attempt.error_message
         
-        run.completed_at = utcnow()
+        run.completed_at = now_ist()
         session.add(run)
         await session.flush()
         
@@ -199,7 +203,7 @@ class HttpExecutor:
             request_method=target.method,
             request_headers=target.headers or {},
             request_body=request_body,
-            started_at=utcnow(),
+            started_at=now_ist(),
         )
         
         try:
@@ -217,9 +221,9 @@ class HttpExecutor:
                 request_kwargs["content"] = request_body
             
             # Execute request with timing
-            start_time = utcnow()
+            start_time = now_ist()
             response = await client.request(**request_kwargs)
-            end_time = utcnow()
+            end_time = now_ist()
             
             # Calculate latency
             latency_ms = (end_time - start_time).total_seconds() * 1000
@@ -248,7 +252,7 @@ class HttpExecutor:
             )
             
         except Exception as e:
-            attempt.completed_at = utcnow()
+            attempt.completed_at = now_ist()
             attempt.error_type, attempt.error_message = classify_error(e)
             
             logger.warning(
@@ -278,7 +282,7 @@ class HttpExecutor:
         
         # Simple variable substitution
         result = body_template
-        result = result.replace("{{timestamp}}", utcnow().isoformat())
+        result = result.replace("{{timestamp}}", now_ist().isoformat())
         
         return result
     

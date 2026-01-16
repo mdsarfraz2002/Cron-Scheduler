@@ -10,6 +10,7 @@ from apscheduler.jobstores.memory import MemoryJobStore
 from apscheduler.executors.asyncio import AsyncIOExecutor
 from sqlalchemy import select, and_
 from sqlalchemy.orm import selectinload
+import pytz
 
 from app.models import Schedule, Target, Run, ScheduleStatus, ScheduleType, RunStatus
 from app.database import get_session, async_session_factory
@@ -19,10 +20,13 @@ from app.config import get_settings
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
+# IST timezone
+IST = pytz.timezone('Asia/Kolkata')
 
-def utcnow() -> datetime:
-    """Get current UTC time as timezone-aware datetime."""
-    return datetime.now(timezone.utc).replace(tzinfo=None)  # Store as naive UTC
+
+def now_ist() -> datetime:
+    """Get current IST time as naive datetime for database storage."""
+    return datetime.now(IST).replace(tzinfo=None)
 
 
 class SchedulerEngine:
@@ -121,7 +125,7 @@ class SchedulerEngine:
             for schedule in schedules:
                 try:
                     # Check if window has expired
-                    if schedule.expires_at and utcnow() >= schedule.expires_at:
+                    if schedule.expires_at and now_ist() >= schedule.expires_at:
                         schedule.status = ScheduleStatus.EXPIRED
                         session.add(schedule)
                         continue
@@ -156,7 +160,7 @@ class SchedulerEngine:
         
         for run in orphaned_runs:
             run.status = RunStatus.FAILED
-            run.completed_at = utcnow()
+            run.completed_at = now_ist()
             run.final_error_message = "Server restarted while run was in progress"
             session.add(run)
             logger.warning(f"Marked orphaned run {run.id} as FAILED")
@@ -212,7 +216,7 @@ class SchedulerEngine:
         """Add a new schedule."""
         # Set start time and calculate expiration
         if schedule.started_at is None:
-            schedule.started_at = utcnow()
+            schedule.started_at = now_ist()
         
         if schedule.duration_seconds and schedule.expires_at is None:
             schedule.expires_at = schedule.started_at + timedelta(seconds=schedule.duration_seconds)
@@ -232,7 +236,7 @@ class SchedulerEngine:
     async def resume_schedule(self, schedule: Schedule):
         """Resume a paused schedule."""
         # Check if still valid
-        if schedule.expires_at and datetime.utcnow() >= schedule.expires_at:
+        if schedule.expires_at and datetime.now_ist() >= schedule.expires_at:
             schedule.status = ScheduleStatus.EXPIRED
             return
         
@@ -251,7 +255,7 @@ class SchedulerEngine:
     
     def _calculate_next_run(self, schedule: Schedule) -> Optional[datetime]:
         """Calculate the next run time for a schedule."""
-        now = utcnow()
+        now = now_ist()
         
         if schedule.schedule_type == ScheduleType.INTERVAL:
             return now + timedelta(seconds=schedule.interval_seconds)
@@ -288,7 +292,7 @@ class SchedulerEngine:
                     return
                 
                 # Check window expiration
-                if schedule.expires_at and utcnow() >= schedule.expires_at:
+                if schedule.expires_at and now_ist() >= schedule.expires_at:
                     schedule.status = ScheduleStatus.EXPIRED
                     self._remove_job_for_schedule(schedule_id)
                     session.add(schedule)
@@ -306,7 +310,7 @@ class SchedulerEngine:
                     return
                 
                 # Create run record with idempotency key to prevent duplicates
-                now = utcnow()
+                now = now_ist()
                 # Idempotency key: schedule_id:timestamp_bucket (1-second resolution)
                 idempotency_key = f"{schedule.id}:{now.strftime('%Y%m%d%H%M%S')}"
                 
@@ -336,7 +340,7 @@ class SchedulerEngine:
                 
                 # Update schedule stats
                 schedule.run_count += 1
-                schedule.last_run_at = utcnow()
+                schedule.last_run_at = now_ist()
                 schedule.next_run_at = self._calculate_next_run(schedule)
                 
                 # Check if we've hit max runs
@@ -362,7 +366,7 @@ class SchedulerEngine:
         """Periodically check and expire schedules whose windows have ended."""
         try:
             async with async_session_factory() as session:
-                now = utcnow()
+                now = now_ist()
                 
                 result = await session.execute(
                     select(Schedule)

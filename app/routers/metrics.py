@@ -4,15 +4,19 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, Response
 from sqlalchemy import select, func, and_, case
 from sqlalchemy.ext.asyncio import AsyncSession
+import pytz
 
 from app.database import get_db
 from app.models import Target, Schedule, Run, Attempt, ScheduleStatus, RunStatus, ErrorType
 from app.schemas import GlobalMetrics, ScheduleMetrics
 
+# IST timezone
+IST = pytz.timezone('Asia/Kolkata')
 
-def utcnow() -> datetime:
-    """Get current UTC time as timezone-aware datetime."""
-    return datetime.now(timezone.utc).replace(tzinfo=None)
+
+def now_ist() -> datetime:
+    """Get current IST time as naive datetime for database storage."""
+    return datetime.now(IST).replace(tzinfo=None)
 
 router = APIRouter(tags=["Metrics"])
 
@@ -30,7 +34,7 @@ async def get_metrics(
     - Average latency
     - Per-schedule breakdown
     """
-    now = utcnow()
+    now = now_ist()
     one_hour_ago = now - timedelta(hours=1)
     one_day_ago = now - timedelta(hours=24)
     
@@ -167,7 +171,7 @@ async def get_prometheus_metrics(
     - api_scheduler_run_latency_ms
     - api_scheduler_errors_total (by error type)
     """
-    now = utcnow()
+    now = now_ist()
     one_hour_ago = now - timedelta(hours=1)
     
     lines = []
@@ -247,5 +251,5 @@ async def health_check():
     """Health check endpoint."""
     return {
         "status": "healthy",
-        "timestamp": utcnow().isoformat(),
+        "timestamp": now_ist().isoformat(),
     }
